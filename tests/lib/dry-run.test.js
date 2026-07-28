@@ -261,11 +261,20 @@ function runTests() {
 
   if (test('--dry-run works with implicit install routing', () => {
     const eccJs = path.resolve(__dirname, '..', '..', 'scripts', 'ecc.js');
+    // The JSON plan is ~1MB and every path in it scales with the checkout root,
+    // so the default 1MB maxBuffer overflows on longer CI paths. spawnSync then
+    // kills the child and reports status null with an empty stderr, so surface
+    // result.error too rather than asserting on a bare `null !== 0`.
     const result = spawnSync(process.execPath, [eccJs, '--dry-run', '--json', 'typescript'], {
       encoding: 'utf8',
       env: { ...process.env },
+      maxBuffer: 16 * 1024 * 1024,
     });
-    assert.strictEqual(result.status, 0, `Expected exit 0, got ${result.status}: ${result.stderr}`);
+    assert.strictEqual(
+      result.status,
+      0,
+      `Expected exit 0, got ${result.status}: ${result.error || ''} ${result.stderr}`
+    );
     const payload = JSON.parse(result.stdout);
     assert.strictEqual(payload.dryRun, true, 'Expected dryRun=true in JSON output');
     assert.deepStrictEqual(payload.plan.legacyLanguages, ['typescript']);

@@ -43,8 +43,10 @@ function runTests() {
       readme.includes('pwsh -File .\\install.ps1 --target claude --modules hooks-runtime'),
       'README should document the supported PowerShell hook install path'
     );
+    // Accept either the plain code-span form (`%USERPROFILE%\.claude`) or the
+    // escaped form some sections still use; both name the same config root.
     assert.ok(
-      readme.includes('%USERPROFILE%\\\\.claude'),
+      readme.includes('%USERPROFILE%\\.claude') || readme.includes('%USERPROFILE%\\\\.claude'),
       'README should call out the correct Windows Claude config root'
     );
   })) passed++; else failed++;
